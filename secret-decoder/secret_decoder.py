@@ -33,7 +33,7 @@ and
 x4 -> to
 The "o" of Tom is an 8 and the "o" of to is an 4
 
-Please, tell me if is my or your mistake, I was mad for two hours trying to solve this problem :'(
+I wasted two hours trying to solve this problem :'(
 """
 
 import fileinput, itertools, collections
