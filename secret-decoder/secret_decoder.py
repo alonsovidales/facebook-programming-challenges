@@ -48,7 +48,6 @@ class SecretDecoder:
     __linesEncoded = []
 
     def __checkIfPossible(self, inLines):
-        print inLines
         for linePos in xrange(0, len(inLines)):
             charDict = {}
             for wordPos in xrange(0, len(inLines[linePos])):
@@ -56,9 +55,7 @@ class SecretDecoder:
                     if charDict.get(inLines[linePos][wordPos][char], '') == '':
                         charDict[inLines[linePos][wordPos][char]] = self.__originLinesEnc[linePos][wordPos][char]
                     else:
-                        print inLines[linePos][wordPos][char] + ' - ' + charDict[inLines[linePos][wordPos][char]] + ' - ' + self.__originLinesEnc[linePos][wordPos][char]
                         if charDict[inLines[linePos][wordPos][char]] != self.__originLinesEnc[linePos][wordPos][char]:
-                            print "NO"
                             return False
 
         return True
@@ -103,9 +100,6 @@ class SecretDecoder:
                         self.__wordsByLen[len(line)] = [line]
                     else:
                         self.__wordsByLen[len(line)].append(line)
-
-        print self.__wordsByLen
-        print self.__linesEncoded
 
 if __name__ == "__main__":
     lines = [line.replace('\n', '') for line in fileinput.input()]
