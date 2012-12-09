@@ -1,0 +1,6 @@
+5
+x
+xx*
+xxx**
+*xx
+xx*xx**
