@@ -90,8 +90,6 @@ class MasterMind:
                 print "Key members: %s" % (keyMembers)
                 print "Not Possibles: %s" % (notPossibles)
                 print "Possibles: %s" % (possibles)
-                print ""
-
 
         mainKeys = []
         if len(possibles) > 0:
