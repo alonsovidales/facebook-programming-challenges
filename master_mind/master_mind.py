@@ -10,7 +10,6 @@ class MasterMind:
     __guesses = None
     __guessLen = None
     __inHiggerInt = 0
-    __possibleKeys = []
     __debug = False
 
     def __checkIfPossibleByPairs(self):
