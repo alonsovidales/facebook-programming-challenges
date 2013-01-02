@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 
-""" I'm sorry but seems that this is not the fastest solution, I used a pre-filter in order
-    to don't process all the impossible keys at the moment of create the list of possible keys, and
-    a two phases filter for all the possible keys ordered by the score of the guesses, but the
-    script is still too complex :'( """
-
-import fileinput
+import fileinput, itertools
 
 __author__ = "Alonso Vidales"
 __email__ = "alonso.vidales@tras2.es"
@@ -16,79 +11,170 @@ class MasterMind:
     __guessLen = None
     __inHiggerInt = 0
     __possibleKeys = []
+    __debug = False
 
-    def __checkPossibleKeyWithAllKeys(self, inKey):
-        for guess in self.__guesses:
-            score = 0
-            for pos in xrange(0, len(inKey)):
-                if guess[pos] == inKey[pos]:
-                    score += 1
+    def __checkIfPossibleByPairs(self):
+        """ If the score is bigger than the half of the guess len in two of the guesses, they
+        should to share at least the score - (guess lengh / 2) elements """
+        prevGuess = self.__guesses[0]
+        for guess in reversed(self.__guesses):
+            if guess[len(guess) - 1] < (self.__guessLen / 2):
+                return True
 
-                if score > guess[len(guess) - 1]:
-                    return False
+            sharedElems = 0
+            for pos in xrange(0, self.__guessLen):
+                if guess[pos] == prevGuess[pos]:
+                    sharedElems += 1
+
+            if self.__debug:
+                print "Shared: %s - Len: %s - Score: %s" % (sharedElems, (self.__guessLen / 2), guess[len(guess) - 1])
+
+            if sharedElems < (guess[len(guess) - 1] - (self.__guessLen / 2)):
+                return False
 
         return True
-                
 
-    def __createPossibleKeys(self, inGuess, inScore, inCurrentScore = 0, inCurrentPos = 0, inCurrentKeys = [0]):
-        if inCurrentScore > inScore or inCurrentPos > self.__guessLen:
-            return
+    def __createPossibleKeys(self, inGuesses):
+        possibles = {}
+        notPossibles = {}
+        keyMembers = {}
 
-        if len(inCurrentKeys) > self.__guessLen:
-            inCurrentKeys.pop()
-            if self.__checkPossibleKeyWithAllKeys(inCurrentKeys):
-                self.__possibleKeys.append(inCurrentKeys)
-            return
+        for pos in xrange(0, self.__guessLen):
+            possibles[pos] = set()
+            notPossibles[pos] = set()
 
-        for value in xrange(0, self.__inHiggerInt):
-            inCurrentKeys[inCurrentPos] = value
+        for guess in inGuesses:
+            if self.__debug:
+                print "Guess: %s" % (guess)
+            remainScore = guess[len(guess) - 1]
 
-            keys = inCurrentKeys[:]
-            keys.append(0)
-
-            self.__createPossibleKeys(inGuess, inScore, inCurrentScore + (int(inCurrentKeys[inCurrentPos] == inGuess[inCurrentPos])), inCurrentPos + 1, keys)
-
-    def __removeImpossibleGuesses(self, inGuess, inScore):
-        # print "Guess: %s - Score: %s" % (inGuess, inScore)
-        newPossibleKeys = []
-
-        for possibleKey in self.__possibleKeys:
-            currentScore = 0
+            totalNotPos = 0
             for pos in xrange(0, self.__guessLen):
-                if inGuess[pos] == possibleKey[pos]:
-                    currentScore += 1
+                if guess[pos] in notPossibles[pos]:
+                    totalNotPos += 1
 
-                if currentScore > inScore:
-                    break
+            # If the total lenght of the guess minus the not possible number are
+            # equal to the score, all the remain numbers are parts of the key
+            if (self.__guessLen - totalNotPos) == remainScore:
+                for pos in xrange(0, self.__guessLen):
+                    if guess[pos] not in notPossibles[pos]:
+                        keyMembers[pos] = guess[pos]
+            else:
+                # All the numbers that we can asset in the key, will decrease the score,
+                # and all the number that are not in the key will increase the score, but will
+                # nos be considerer in a future
+                for pos, value in keyMembers.items():
+                    if guess[pos] == value:
+                        remainScore -= 1
+                    else:
+                        remainScore += 1
 
-            if currentScore == inScore:
-                newPossibleKeys.append(possibleKey)
+                if remainScore == 0:
+                    for pos in xrange(0, self.__guessLen):
+                        notPossibles[pos].add(guess[pos])
+                        possibles[pos].discard(guess[pos])
+                        if self.__debug:
+                            print "Discarted: %s" % (guess[pos])
+                else:
+                    for pos in xrange(0, self.__guessLen):
+                        if (self.__guessLen - pos) == remainScore:
+                            if keyMembers.get(pos, False) == False:
+                                keyMembers[pos] = guess[pos]
+                            remainScore -= 1
+                        else:
+                            if guess[pos] not in notPossibles[pos]:
+                                remainScore -= 1
+                                possibles[pos].add(guess[pos])
 
-        self.__possibleKeys = newPossibleKeys
+            if self.__debug:
+                print "Key members: %s" % (keyMembers)
+                print "Not Possibles: %s" % (notPossibles)
+                print "Possibles: %s" % (possibles)
+                print ""
+
+
+        mainKeys = []
+        if len(possibles) > 0:
+            for pos in xrange(0, self.__guessLen):
+                if keyMembers.get(pos, False) <> False:
+                    mainKeys.append([keyMembers[pos]])
+                else:
+                    if len(possibles[pos]) == 0:
+                        keys = []
+                        for count in xrange(1, self.__inHiggerInt + 1):
+                            if count not in notPossibles[pos]:
+                                keys.append(count)
+                        mainKeys.append(keys)
+                    else:
+                        mainKeys.append(list(possibles[pos]))
+
+        if self.__debug:
+            print "Main keys: %s" % (mainKeys)
+
+        possibleKeyValues = []
+        for pos in xrange(0, self.__guessLen):
+            if keyMembers.get(pos, False) <> False:
+                possibleKeyValues.append([keyMembers[pos]])
+            else:
+                keys = []
+                for count in xrange(1, self.__inHiggerInt + 1):
+                    if count not in notPossibles[pos]:
+                        keys.append(count)
+
+                possibleKeyValues.append(keys)
+                        
+
+        if self.__debug:
+            print "Possible keys: %s" % (possibleKeyValues)
+
+        return mainKeys, possibleKeyValues
+
+    def __checkIfPossibleWithGuesses(self, inKey):
+        if self.__debug:
+            print "Checking:"
+            print inKey
+
+        for guess in self.__guesses:
+            score = 0
+            for pos in xrange(0, self.__guessLen):
+                if inKey[pos] == guess[pos]:
+                    score += 1
+
+            if score < guess[len(guess) - 1]:
+                return False
+
+        return True
 
     def resolve(self):
         # Create a set with all the possible keys using the guess with the lowest score...
         self.__guesses = sorted(self.__guesses, key = lambda guess: guess[len(guess) - 1])
 
-        firstGuess = self.__guesses[0]
-        self.__createPossibleKeys(firstGuess[:-1], firstGuess[len(firstGuess) - 1])
+        # First of all check if is possible comparing the matches between the keys, is
+        # the fastest method that can define if is not possible
+        if not self.__checkIfPossibleByPairs():
+            return "No"
 
-        # print self.__possibleKeys
+        # Get the posible keys, mainKeys will be the keys with most posibilities to match
+        # because of they include all the numbersincluded into the different guesses, and
+        # possibleKeys the rest of posible keys with the numbers that can't be discarted
+        mainKeys, possibleKeys = self.__createPossibleKeys(self.__guesses)
 
-        # Remove all the impossible keys, do it to times to ensure that all the
-        # guesses are checked against all the guesses
-        for times in xrange(0, 2):
-            for guess in self.__guesses:
-                self.__removeImpossibleGuesses(guess[:-1], guess[len(guess) - 1])
+        # Check the keys with most posibilities
+        for key in itertools.product(*mainKeys):
+            if self.__checkIfPossibleWithGuesses(key):
+                return "Yes"
 
-        # If we have at least one possible key, return the string "yes"
-        if len(self.__possibleKeys) > 0:
-            return 'Yes'
+        # Check the rest, this is the brute force  method :'(
+        for key in itertools.product(*possibleKeys):
+            if self.__checkIfPossibleWithGuesses(key):
+                return "Yes"
 
-        return 'No'
+        # No key matches, we are lost :'(
+        return "No"
 
     def __init__(self, inHiggerInt, inGuessLen, inGuesses):
-        # print "HiggerGuess: %s GuessLen: %s " % (inHiggerInt, inGuessLen)
+        if self.__debug:
+            print "HiggerGuess: %s GuessLen: %s " % (inHiggerInt, inGuessLen)
 
         self.__inHiggerInt = inHiggerInt
         self.__guesses = inGuesses
