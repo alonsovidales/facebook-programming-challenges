@@ -166,7 +166,7 @@ class MasterMind:
             if self.__checkIfPossibleWithGuesses(key):
                 return "Yes"
 
-        # No key matches, we are lost :'(
+        # No key matches, no hope left :'(
         return "No"
 
     def __init__(self, inHiggerInt, inGuessLen, inGuesses):
