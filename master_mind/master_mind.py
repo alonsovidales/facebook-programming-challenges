@@ -77,7 +77,7 @@ class MasterMind:
                 else:
                     for pos in xrange(0, self.__guessLen):
                         if (self.__guessLen - pos) == remainScore:
-                            if keyMembers.get(pos, False) == False:
+                            if pos not in keyMembers:
                                 keyMembers[pos] = guess[pos]
                             remainScore -= 1
                         else:
@@ -93,7 +93,7 @@ class MasterMind:
         mainKeys = []
         if len(possibles) > 0:
             for pos in xrange(0, self.__guessLen):
-                if keyMembers.get(pos, False) <> False:
+                if pos in keyMembers:
                     mainKeys.append([keyMembers[pos]])
                 else:
                     if len(possibles[pos]) == 0:
@@ -110,7 +110,7 @@ class MasterMind:
 
         possibleKeyValues = []
         for pos in xrange(0, self.__guessLen):
-            if keyMembers.get(pos, False) <> False:
+            if pos in keyMembers:
                 possibleKeyValues.append([keyMembers[pos]])
             else:
                 keys = []
