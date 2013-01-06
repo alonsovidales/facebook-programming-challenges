@@ -1,69 +1,96 @@
 #!/usr/bin/env python
 
-import fileinput, itertools, collections
+import fileinput
 
 __author__ = "Alonso Vidales"
 __email__ = "alonso.vidales@tras2.es"
 __date__ = "2012-12-09"
 
 class GroupObjects:
-    __positions = None
-    __problemInfo = None
+    __groups = None
+    __position = None
+    __debug = False
 
-    def __calcDistances(self, inPositions):
-        """ Will return the smallest distance between all the objects on the group,
-        and a distionary with the distances as key, and the pair of items as values """
-        distances = {}
-        totalDist = 0
-        for positions in itertools.combinations(inPositions, 2):
-            dist = abs(positions[1] - positions[0])
-            totalDist += dist
-            if distances.get(dist, '') != '':
-                distances[dist].append((positions[1], positions[0]))
-            else:
-                distances[dist] = [((positions[1], positions[0]))]
+    def __checkIfPossible(self, inNumber, inGroupPos):
+        """
+        Returns true if the given number on the given group can be positioned on
+        the self.__position position.
+        This method compares the number against all the groups O(n - 1) where n is
+        the number of groups
+        """
 
-        return (totalDist, distances)
+        maxPos = 0
+        minPos = 0
+
+        for groupPos in xrange(0, len(self.__groups)):
+            if inGroupPos <> groupPos:
+                if self.__debug:
+                    print "Group: %s Number: %s Comparing Group: %s Comp Num: %s" % (
+                        inGroupPos,
+                        inNumber,
+                        groupPos,
+                        self.__groups[groupPos][0])
+
+                # Check if the compared group contain a number smaller than the current
+                # number, then we can use it to increase the possible position
+                if self.__groups[groupPos][0] <= inNumber:
+                    minPos += 1
+                    if self.__debug:
+                        print "Inc Pos"
+
+                # Check if the bigger number of the current group is smaller than the
+                # current one, then the player will play always a number who will move
+                # the current number one position
+                if self.__groups[groupPos][len(self.__groups[groupPos]) - 1] < inNumber:
+                    maxPos += 1
+
+        # Check if the number can be included into the numbers on the whised position
+        if minPos >= (self.__position - 1) and maxPos <= (self.__position - 1):
+            if self.__debug:
+                print "Found: %s" % (inNumber)
+            return True
+
+        return False
 
     def resolve(self):
-        distancesTotal = 0
-        while len(self.__positions) > self.__problemInfo['groups']:
-            # Get the total distance and the doctionary to know which is the better item to be removed
-            totalDistance, distDict = self.__calcDistances(self.__positions)
-            minDistance = sorted(distDict.keys())[0]
-            distancesTotal += minDistance
-            minDistItemsPairs = distDict[minDistance]
+        """
+        Returns an integer with the number of all the numbers that can fit on the given position
+        """
+        possibleSolutions = set()
 
-            # Check each pair in order to know the best fit, the best one will be the pair of items
-            # to be removed that will give the smallest distance between all the objects on the group
-            for itemPair in minDistItemsPairs:
-                auxPos = self.__positions.copy()
-                auxPos.remove(itemPair[0])
-                removeFirstDist, distances = self.__calcDistances(auxPos)
+        # Check all the numbers against all the groups in order to determinate all the
+        # possible positions for the number number, each number will be compared against
+        # the biggest and smallest numbers of each group, then O(n * m) where n is the
+        # number of numbers, and m the number of groups
+        for groupPos in xrange(0, len(self.__groups)):
+            for number in self.__groups[groupPos]:
+                if number not in possibleSolutions:
+                    if self.__checkIfPossible(number, groupPos):
+                        possibleSolutions.add(number)
+                        if self.__debug:
+                            print "Comparing: %s" % (number)
+                    
 
-                auxPos = self.__positions.copy()
-                auxPos.remove(itemPair[1])
-                removeSecDist, distances = self.__calcDistances(auxPos)
+        if self.__debug:
+            print "Solutions: %s" % (sorted(possibleSolutions))
 
-                # Check wich is the element that can be removed obtainin a set of elements with the
-                # smallest distance possible, and remove this item
-                if removeFirstDist > removeSecDist:
-                    self.__positions.remove(itemPair[1])
-                else:
-                    self.__positions.remove(itemPair[0])
+        return len(possibleSolutions)
 
-        return distancesTotal
+    def __init__(self, inPosition, inPositions):
+        self.__groups = [sorted(map(int, numbers.split()[1:])) for numbers in inPositions]
+        self.__position = inPosition
 
-    def __init__(self, inProblemInfo, inPositions):
-        problemInfo = map(int, inProblemInfo.split())
-        self.__problemInfo = {
-            "objects": problemInfo[0],
-            "groups": problemInfo[1]}
-        self.__positions = set(map(int, inPositions.split()))
-        #print "Problem: %s Positions: %s" % (self.__problemInfo, self.__positions) 
+        if self.__debug:
+            print "Position: %s Groups: %s" % (self.__position, self.__groups) 
 
 if __name__ == "__main__":
     lines = [line.replace('\n', '') for line in fileinput.input()]
 
+    currentLine = 1
     for problem in xrange(0, int(lines[0])):
-        print GroupObjects(lines[(problem * 2) + 1], lines[(problem * 2) + 2]).resolve()
+        problemInfo = map(int, lines[currentLine].split())
+        print GroupObjects(
+            problemInfo[1],
+            lines[currentLine + 1:currentLine + 1 + problemInfo[0]]).resolve()
+
+        currentLine += problemInfo[0] + 1
