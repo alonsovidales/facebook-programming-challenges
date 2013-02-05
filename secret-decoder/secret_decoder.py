@@ -22,9 +22,10 @@ class SecretDecoder:
         @return bool True if is possible, False if not
         """
         if self.__debug:
-            print inLine
+            print "Check if possible: %s" % (inLine)
 
         charDict = {}
+        intDict = {}
         # Check char by char all the words
         for wordPos in xrange(0, len(inLine)):
             for charPos in xrange(0, len(inLine[wordPos])):
@@ -34,6 +35,17 @@ class SecretDecoder:
                     charDict[inLine[wordPos][charPos]] = inOriginal[wordPos][charPos]
                 else:
                     if charDict[inLine[wordPos][charPos]] != inOriginal[wordPos][charPos]:
+                        if self.__debug:
+                            print "No possible"
+
+                        return False
+
+                # Use a dictionary in order to know if the character was previously setted, and
+                # if it was, check if the replacement matches
+                if intDict.get(inOriginal[wordPos][charPos], '') == '':
+                    intDict[inOriginal[wordPos][charPos]] = inLine[wordPos][charPos]
+                else:
+                    if intDict[inOriginal[wordPos][charPos]] != inLine[wordPos][charPos]:
                         if self.__debug:
                             print "No possible"
 
@@ -50,7 +62,7 @@ class SecretDecoder:
         the necessary format to be printed
         """
         if self.__debug:
-            return "Checking: %s - %s" % (inOriginalLine, inLine)
+            print "Checking: %s - %s" % (inOriginalLine, inLine)
 
         if self.__checkIfPossibleLine(inOriginalLine, inLine):
             # If the line is possible, and the number of words are the same, we have a
