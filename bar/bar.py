@@ -7,8 +7,6 @@ __email__ = "alonso.vidales@tras2.es"
 __date__ = "2012-12-09"
 
 class GroupObjects:
-    __groups = None
-    __position = None
     __debug = False
 
     def __checkIfPossible(self, inNumber, inGroupPos):
@@ -17,6 +15,9 @@ class GroupObjects:
         the self.__position position.
         This method compares the number against all the groups O(n - 1) where n is
         the number of groups
+
+        @param inNumber int The number to be compared
+        @param inGroupPos int The position of the group who contains the number
         """
 
         maxPos = 0
@@ -54,7 +55,7 @@ class GroupObjects:
 
     def resolve(self):
         """
-        Returns an integer with the number of all the numbers that can fit on the given position
+        @return int the number of all the numbers that can fit on the given position
         """
         possibleSolutions = set()
 
@@ -77,6 +78,8 @@ class GroupObjects:
         return len(possibleSolutions)
 
     def __init__(self, inPosition, inPositions):
+        # Get all the groups, ans sort the numbers for each group, removing the first one,
+        # that is the number of numbers
         self.__groups = [sorted(map(int, numbers.split()[1:])) for numbers in inPositions]
         self.__position = inPosition
 

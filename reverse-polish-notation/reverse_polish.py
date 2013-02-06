@@ -8,12 +8,10 @@ __author__ = "Alonso Vidales"
 __email__ = "alonso.vidales@tras2.es"
 __date__ = "2012-12-09"
 
-class PolishNotation:
-    __stack = None
-    __input = None
-    __maxNumOfOps = None
+class ReversePolishNotation:
+    __debug = False
 
-    def __maxNumOfOps(self):
+    def __calcMaxNumOfOps(self):
         replace = 0
         stackLength = 0
         for count in xrange(0, len(self.__input)):
@@ -50,14 +48,16 @@ class PolishNotation:
         # Check if the current operation is valid, in this case, we can set
         # the max numbre of ops to the current number of ops
         if self.__isValid(operation):
-            #print "Valid: %s - %s" % (currentOps, operation)
+            if self.__debug:
+                print "Valid: %s - %s" % (currentOps, operation)
             self.__maxNumOfOps = currentOps
 
         # Check if this is not a valid way, or the number os current ops are
         # bigger than another best option
         if currentOps >= self.__maxNumOfOps or currentPos >= len(operation):
-            #print operation
-            #print "returning -1 Operation: %s Max Operations: %s ..." % (currentOps, self.__maxNumOfOps)
+            if self.__debug:
+                print operation
+                print "returning -1 Operation: %s Max Operations: %s ..." % (currentOps, self.__maxNumOfOps)
             return -1
 
         self.__resolveByDeep(operation, currentPos + 1, currentOps)
@@ -86,15 +86,16 @@ class PolishNotation:
         self.__resolveByDeep(newOperation, currentPos + 1, currentOps + 1)
 
     def resolve(self):
-        self.__maxNumOfOps()
+        self.__calcMaxNumOfOps()
         self.__resolveByDeep(self.__input)
         return self.__maxNumOfOps
 
     def __init__(self, inProblem):
         self.__input = list(inProblem)
+        self.__maxNumOfOps = None
 
 if __name__ == "__main__":
     lines = [line.replace('\n', '') for line in fileinput.input()]
 
     for problem in xrange(1, int(lines[0]) + 1):
-        print PolishNotation(lines[problem]).resolve()
+        print ReversePolishNotation(lines[problem]).resolve()

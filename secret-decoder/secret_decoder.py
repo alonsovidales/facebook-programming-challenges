@@ -8,11 +8,6 @@ __date__ = "2013-01-13"
 
 class SecretDecoder:
     __debug = False
-    # Will contain the original lines encoded as lists of words
-    __linesEncoded = None
-    # This dictionary will be used to store all the possible words sorted by length in order to
-    # do as fast as possible the replacement
-    __wordsByLen = None
 
     def __checkIfPossibleLine(self, inOriginal, inLine):
         """
@@ -94,8 +89,12 @@ class SecretDecoder:
         return '\n'.join(decrypted)
 
     def __init__(self, inInputLines):
+        # Will contain the original lines encoded as lists of words
         self.__linesEncoded = []
+        # This dictionary will be used to store all the possible words sorted by length in order to
+        # do as fast as possible the replacement
         self.__wordsByLen = {}
+
         readingSecrets = False
 
         # Parse the input lines and prepare the dictionary of words by length, the lists with the encoded

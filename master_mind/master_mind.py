@@ -7,9 +7,6 @@ __email__ = "alonso.vidales@tras2.es"
 __date__ = "2012-12-30"
 
 class MasterMind:
-    __guesses = None
-    __guessLen = None
-    __inHiggerInt = 0
     __debug = False
 
     def __checkIfPossibleByPairs(self):
