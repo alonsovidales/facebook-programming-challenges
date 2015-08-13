@@ -1,59 +1,45 @@
 #!/usr/bin/env python
 
-import itertools
-
-__author__ = "Alonso Vidales"
-__email__ = "alonso.vidales@tras2.es"
-__date__ = "2013-03-21"
-
 class Staves:
-    __debug = False
-
-    def __checkWighted(self, inStr1, inStr2):
-        stavesInt = map(int, list(inStr1 + inStr2))
-
-        regularSum = sum(stavesInt)
-
-        weigthedSum = 0
-        for pos in xrange(0, len(stavesInt)):
-            weigthedSum += stavesInt[pos] * (pos + 1)
-
-        return (float(weigthedSum) / regularSum) == (float(len(stavesInt) + 1) / 2)
-
-    def __checkPossible(self, inStr1, inStr2):
-        return len(self.__string.replace(inStr1, '').replace(inStr2, '')) == (len(self.__string) - len(inStr1) - len(inStr2))
-
-    def resolve(self):
-        stavesByLen = {}
-
-        for count in xrange(0, len(self.__string)):
-            for subStrLen in xrange(0, len(self.__string) - count):
-                stave = self.__string[count:count + subStrLen + 1]
-                if len(stave) in stavesByLen:
-                    stavesByLen[len(stave)].append(stave)
-                else:
-                    stavesByLen[len(stave)] = [stave]
-
-        if self.__debug:
-            print stavesByLen
-
-        for length in sorted(stavesByLen.keys(), reverse = True):
-            for combination in itertools.combinations(stavesByLen[length], 2):
-                if self.__checkPossible(combination[0], combination[1]):
-                    if (
-                        (self.__checkWighted(combination[0], combination[1])) or
-                        (self.__checkWighted(combination[0][::-1], combination[1])) or
-                        (self.__checkWighted(combination[0], combination[1][::-1])) or
-                        (self.__checkWighted(combination[0][::-1], combination[1][::-1]))):
-
-                        return "%d %d %d" % (
-                            self.__string.find(combination[0]),
-                            self.__string.find(combination[1]),
-                            len(combination[0]))
-
-        return False
-
+    """Creates a new Staves object"""
     def __init__(self, inStr):
         self.__string = inStr
 
-print Staves(raw_input()).resolve()
+    """Finds the longest balanced pair of staves
+
+    This is the master method which is used to call the others.
+    It checks all pairs of staves, longest first.
+    """  
+    def find_longest_balanced_pair(self):
+        max_stave_len = len(self.__string) / 2
+        for stave_len in xrange(max_stave_len, 0, -1):
+            rightmost_stave1_start = len(self.__string) - 2 * stave_len
+            for stave1_start in xrange(0, rightmost_stave1_start + 1):
+                stave1 = self.__string[stave1_start:stave1_start + stave_len]
+                for stave2_start in xrange(stave1_start + stave_len, rightmost_stave1_start + stave_len + 1):
+                    stave2 = self.__string[stave2_start:stave2_start + stave_len]
+                    if self.__balanced(stave1, stave2):
+                        return '%d %d %d' % (stave1_start, stave2_start, stave_len)
+        return False
+
+    # Checks whether the pair of staves can be balanced   
+    def __balanced(self, stave1, stave2):
+        return (self.__layout_is_balanced(stave1, stave2) or
+                self.__layout_is_balanced(stave1, stave2[::-1]) or
+                self.__layout_is_balanced(stave1[::-1], stave2) or
+                self.__layout_is_balanced(stave1[::-1], stave2[::-1]))
+
+    # Checks whether a particular layout of a pair of staves is balanced
+    # There are 4 possible layouts per pair: both staves forward, stave 1 forward with stave 2 backward,
+    #     stave 1 backward with stave 2 forward, both staves backward
+    def __layout_is_balanced(self, stave1, stave2):
+        staves = map(int, list(stave1 + stave2))
+        regular_sum = sum(staves)    # Sum of masses for each section of staves
+        weighted_sum = 0             # Sum of position * mass for each section of staves
+        for pos in xrange(0, len(staves)):
+            weighted_sum += staves[pos] * (pos + 1)
+        center_of_gravity = float(weighted_sum) / regular_sum
+        midpoint_position_of_staves = float(len(staves) + 1) / 2
+        return center_of_gravity == midpoint_position_of_staves
+
+print Staves(raw_input()).find_longest_balanced_pair()
